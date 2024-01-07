@@ -14,10 +14,16 @@ public class WallGrid : MonoBehaviour
 
     [SerializeField] int size;
     [SerializeField] Tile TilePrefab;
-    Dictionary<Tuple<int, int>, Tile>  grid = new();
+    Dictionary<Tuple<int, int>, Tile> grid = new();
+
     [SerializeField] Vector3 startingPositionOffset;
     [SerializeField] Vector3 startingRotationOffset;
     [SerializeField] ProjectionAxis projectionAxis;
+
+    private void OnEnable()
+    {
+        Instantiator.OnCubeCreatedTriggered += ChangeTileShadow;
+    }
 
 
     private void Start()
@@ -31,7 +37,7 @@ public class WallGrid : MonoBehaviour
     {
         for (int i = 0; i < size; i++)
         {
-            for(int j = 0; j < size; j++)
+            for (int j = 0; j < size; j++)
             {
                 Tile instantiatedTile = Instantiate(TilePrefab, new Vector3(i, 0, j), Quaternion.identity);
                 instantiatedTile.transform.parent = transform;
@@ -42,29 +48,25 @@ public class WallGrid : MonoBehaviour
         }
     }
 
-    private void Update()
+    void ChangeTileShadow(Vector3 position)
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        Tuple<int, int> gridPos;
+        if (projectionAxis is ProjectionAxis.XBased)
         {
-            if (grid.ContainsKey(new Tuple<int, int>(0, 0)))
-            {
-                if (projectionAxis is ProjectionAxis.XBased)
-                {
-                    ChangeTileShadow(grid[new Tuple<int, int>(5,5)]);
-
-                }
-
-            }
-            else
-            {
-                Debug.Log("No Such Tile");
-            }
+            gridPos = new Tuple<int, int>((int)position.y, (int)position.z);
         }
-    }
+        else
+        {
+            gridPos = new Tuple<int, int>((int)position.x, (int)position.y);
 
-    void ChangeTileShadow(Tile tile)
-    {
-        tile.ChangeColor();
+        }
+
+        if (grid.TryGetValue(gridPos, out Tile tile))
+        {
+            tile.ChangeColor();
+        }
+
+
     }
 
 }
