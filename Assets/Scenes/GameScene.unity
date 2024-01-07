@@ -193,6 +193,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1557266531}
     m_Modifications:
+    - target: {fileID: 783748545011523276, guid: 678f0aa89ae1a4d47bf33c7cfb2e2007, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
     - target: {fileID: 1288191491072311065, guid: 678f0aa89ae1a4d47bf33c7cfb2e2007, type: 3}
       propertyPath: m_Name
       value: GroundPlane
@@ -1564,7 +1568,7 @@ Transform:
   m_GameObject: {fileID: 1557266530}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4, y: 0, z: 4}
+  m_LocalPosition: {x: 4, y: -1, z: 4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
