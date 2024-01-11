@@ -16,14 +16,11 @@ public class Instantiator : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            // Raycast from the camera to the mouse position
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            // Perform the raycast
             if (Physics.Raycast(ray, out hit))
             {
-                // Get the normal vector at the intersection point
                 Vector3 intersectionNormal = hit.normal;
                 Vector3 intersectionPoint = hit.transform.position;
 
