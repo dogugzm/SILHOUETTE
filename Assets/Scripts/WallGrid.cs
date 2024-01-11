@@ -17,10 +17,11 @@ public class WallGrid : MonoBehaviour
     Dictionary<Tuple<int, int>, Tile> grid = new();
     List<Tuple<int, int>> shadowGrid = new();
 
-
     [SerializeField] Vector3 startingPositionOffset;
     [SerializeField] Vector3 startingRotationOffset;
     [SerializeField] ProjectionAxis projectionAxis;
+
+    List<Tuple<int, int>> suitableTuples = new List<Tuple<int, int>>();
 
     private void OnEnable()
     {
@@ -48,9 +49,26 @@ public class WallGrid : MonoBehaviour
         }
     }
 
+  
+
+    private void UpdateSuitableTiles(Dictionary<Tuple<int, int>, Tile> grid)
+    {
+
+        foreach (var kvp in grid)
+        {
+            // Her bir Tile'ýn isSuitable özelliðini kontrol etme
+            if (kvp.Value.isSuitable)
+            {
+                suitableTuples.Add(kvp.Key);
+            }
+        }
+    }
+
     private Tuple<int, int> GenerateUniqueRandomPosition()
     {
-        Tuple<int, int> randomPos = new(UnityEngine.Random.Range(0, size), UnityEngine.Random.Range(0, size));
+        // get random tuple from suitable tile
+
+        Tuple<int, int> randomPos = suitableTuples[UnityEngine.Random.Range(0, suitableTuples.Count)];
 
         if (shadowGrid.Contains(randomPos))
         {
@@ -68,64 +86,28 @@ public class WallGrid : MonoBehaviour
         {
             for (int j = 0; j < size; j++)
             {
-                Tile instantiatedTile = Instantiate(TilePrefab,transform);
+                Tile instantiatedTile = Instantiate(TilePrefab, transform);
                 instantiatedTile.transform.localPosition = new Vector3(i, 0, j);
                 instantiatedTile.name = "Tile" + i + "_" + j;
                 grid.Add(new Tuple<int, int>(i, j), instantiatedTile);
+                if (i is 0)
+                {
+                    instantiatedTile.isSuitable = true;
+                }
 
                 // Wait for the next frame
                 await UniTask.DelayFrame(5);
             }
         }
+        UpdateSuitableTiles(grid);
 
     }
 
-    void CreatePlane(int width, int length)
-    {
-        // Create a new GameObject to hold the plane
-        GameObject planeObject = new GameObject("RuntimePlane");
-        planeObject.transform.parent = transform;
-
-
-        // Add a MeshFilter component
-        MeshFilter meshFilter = planeObject.AddComponent<MeshFilter>();
-
-        // Create a new mesh
-        Mesh mesh = new();
-
-        // Define vertices for the plane
-        Vector3[] vertices = new Vector3[4];
-        vertices[0] = new Vector3(0f, 0f, 0f);
-        vertices[1] = new Vector3(-width, 0f, 0f);
-        vertices[2] = new Vector3(-width, 0f, length);
-        vertices[3] = new Vector3(0f, 0f, length);
-
-        // Define triangles
-        int[] triangles = { 0, 1, 2, 0, 2, 3 };
-
-        // Set the mesh data
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-
-        // Automatically calculate normals
-        //mesh.RecalculateNormals();
-
-        // Assign the mesh to the MeshFilter component
-        meshFilter.mesh = mesh;
-
-        // Add a MeshRenderer component
-        MeshRenderer meshRenderer = planeObject.AddComponent<MeshRenderer>();
-
-        // Optional: Set material for the plane
-        meshRenderer.material = TilePrefab.GetComponentInChildren<MeshRenderer>().sharedMaterial;
-
-        transform.position = new Vector3(length, 0, width);
-
-
-    }
+    
 
     void ChangeTileShadow(Vector3 position)
     {
+
         Tuple<int, int> gridPos;
         if (projectionAxis is ProjectionAxis.XBased)
         {
@@ -139,20 +121,69 @@ public class WallGrid : MonoBehaviour
 
         if (grid.TryGetValue(gridPos, out Tile tile))
         {
-            tile.ChangeColor();
+            tile.ChangeColor(Color.grey);
             shadowGrid.Add(gridPos);
+
         }
+
+        
     }
+
+    void CalculateSuitableTiles(List<Tuple<int,int>> suitableCenters)
+    {
+        // +1 lerinde tile yoksa o +1 ler benim için suitabledýr.
+        foreach (var item in suitableCenters)
+        {
+            Tuple<int, int> tupleXNeg = new(item.Item1 + 1, item.Item2);
+            Tuple<int, int> tupleYNeg = new(item.Item1 , item.Item2 + 1);
+            Tuple<int, int> tupleXYNeg = new(item.Item1 + 1, item.Item2 + 1);
+
+            if (grid.TryGetValue(tupleXYNeg, out Tile tileX))
+            {
+                if (!shadowGrid.Contains(tupleXNeg))
+                {
+                    tileX.isSuitable = true;
+                    tileX.ChangeColor(Color.cyan);
+                }
+            }
+            if (grid.TryGetValue(tupleXYNeg, out Tile tileY))
+            {
+                if (!shadowGrid.Contains(tupleYNeg))
+                {
+                    tileY.isSuitable = true;
+                    tileX.ChangeColor(Color.cyan);
+
+                }
+            }
+            if (grid.TryGetValue(tupleXYNeg, out Tile tileXY))
+            {
+                if (!shadowGrid.Contains(tupleXYNeg))
+                {
+                    tileXY.isSuitable = true;
+                    tileX.ChangeColor(Color.cyan);
+
+                }
+            }
+
+        }
+
+    }
+
+
 
     void ChangeTileShadow(Tuple<int, int> gridPos)
     {
 
         if (grid.TryGetValue(gridPos, out Tile tile))
         {
-            tile.ChangeColor();
+            tile.ChangeColor(Color.grey);
             shadowGrid.Add(gridPos);
 
+
         }
+
+        CalculateSuitableTiles(shadowGrid);
+        UpdateSuitableTiles(grid);
     }
 
 }

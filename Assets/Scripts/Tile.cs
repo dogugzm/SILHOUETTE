@@ -5,6 +5,7 @@ using UnityEngine;
 public class Tile : MonoBehaviour
 {
     public MeshRenderer[] renderers;
+    public bool isSuitable = false;
 
     private void Start()
     {
@@ -12,11 +13,11 @@ public class Tile : MonoBehaviour
 
     }
 
-    public void ChangeColor()
+    public void ChangeColor(Color color)
     {
         foreach (var renderer in renderers)
         {
-            renderer.material.color = Color.gray;
+            renderer.material.color = color;
         }
     }
 }
