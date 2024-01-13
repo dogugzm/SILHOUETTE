@@ -15,13 +15,13 @@ public class WallGrid : MonoBehaviour
     [SerializeField] int size;
     [SerializeField] Tile TilePrefab;
     Dictionary<Tuple<int, int>, Tile> grid = new();
-    List<Tuple<int, int>> shadowGrid = new();
+    public List<Tuple<int, int>> shadowGrid = new();
 
     [SerializeField] Vector3 startingPositionOffset;
     [SerializeField] Vector3 startingRotationOffset;
     [SerializeField] ProjectionAxis projectionAxis;
 
-    List<Tuple<int, int>> suitableTuples = new List<Tuple<int, int>>();
+    public List<Tuple<int, int>> suitableTuples = new List<Tuple<int, int>>();
 
     private void OnEnable()
     {
@@ -47,28 +47,41 @@ public class WallGrid : MonoBehaviour
             Tuple<int, int> randomPos = GenerateUniqueRandomPosition();
             ChangeTileShadow(randomPos);
         }
+        
     }
-
-  
-
-    private void UpdateSuitableTiles(Dictionary<Tuple<int, int>, Tile> grid)
+    private async UniTask CreateWallAsync()
     {
-
-        foreach (var kvp in grid)
+        int randomJ = UnityEngine.Random.Range(0, size);
+        for (int i = 0; i < size; i++)
         {
-            // Her bir Tile'ýn isSuitable özelliðini kontrol etme
-            if (kvp.Value.isSuitable)
+            for (int j = 0; j < size; j++)
             {
-                suitableTuples.Add(kvp.Key);
+                Tile instantiatedTile = Instantiate(TilePrefab, transform);
+                instantiatedTile.transform.localPosition = new Vector3(i, 0, j);
+                instantiatedTile.name = "Tile" + i + "_" + j;
+                Tuple<int, int> instantiatedTuple = new(i, j);
+                grid.Add(instantiatedTuple, instantiatedTile);
+                if ((i == 0) && (j == randomJ))
+                {
+                    instantiatedTile.isSuitable = true;
+                    suitableTuples.Add(instantiatedTuple);
+                    Debug.Log("suitable setted");
+                }
+
+                // Wait for the next frame
+                await UniTask.DelayFrame(5);
             }
         }
     }
 
+
     private Tuple<int, int> GenerateUniqueRandomPosition()
     {
         // get random tuple from suitable tile
-
+        Debug.Log(suitableTuples.Count);
         Tuple<int, int> randomPos = suitableTuples[UnityEngine.Random.Range(0, suitableTuples.Count)];
+        
+
 
         if (shadowGrid.Contains(randomPos))
         {
@@ -79,31 +92,6 @@ public class WallGrid : MonoBehaviour
         // If the position is unique, return it.
         return randomPos;
     }
-
-    private async UniTask CreateWallAsync()
-    {
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                Tile instantiatedTile = Instantiate(TilePrefab, transform);
-                instantiatedTile.transform.localPosition = new Vector3(i, 0, j);
-                instantiatedTile.name = "Tile" + i + "_" + j;
-                grid.Add(new Tuple<int, int>(i, j), instantiatedTile);
-                if (i is 0)
-                {
-                    instantiatedTile.isSuitable = true;
-                }
-
-                // Wait for the next frame
-                await UniTask.DelayFrame(5);
-            }
-        }
-        UpdateSuitableTiles(grid);
-
-    }
-
-    
 
     void ChangeTileShadow(Vector3 position)
     {
@@ -125,51 +113,7 @@ public class WallGrid : MonoBehaviour
             shadowGrid.Add(gridPos);
 
         }
-
-        
     }
-
-    void CalculateSuitableTiles(List<Tuple<int,int>> suitableCenters)
-    {
-        // +1 lerinde tile yoksa o +1 ler benim için suitabledýr.
-        foreach (var item in suitableCenters)
-        {
-            Tuple<int, int> tupleXNeg = new(item.Item1 + 1, item.Item2);
-            Tuple<int, int> tupleYNeg = new(item.Item1 , item.Item2 + 1);
-            Tuple<int, int> tupleXYNeg = new(item.Item1 + 1, item.Item2 + 1);
-
-            if (grid.TryGetValue(tupleXYNeg, out Tile tileX))
-            {
-                if (!shadowGrid.Contains(tupleXNeg))
-                {
-                    tileX.isSuitable = true;
-                    tileX.ChangeColor(Color.cyan);
-                }
-            }
-            if (grid.TryGetValue(tupleXYNeg, out Tile tileY))
-            {
-                if (!shadowGrid.Contains(tupleYNeg))
-                {
-                    tileY.isSuitable = true;
-                    tileX.ChangeColor(Color.cyan);
-
-                }
-            }
-            if (grid.TryGetValue(tupleXYNeg, out Tile tileXY))
-            {
-                if (!shadowGrid.Contains(tupleXYNeg))
-                {
-                    tileXY.isSuitable = true;
-                    tileX.ChangeColor(Color.cyan);
-
-                }
-            }
-
-        }
-
-    }
-
-
 
     void ChangeTileShadow(Tuple<int, int> gridPos)
     {
@@ -178,12 +122,53 @@ public class WallGrid : MonoBehaviour
         {
             tile.ChangeColor(Color.grey);
             shadowGrid.Add(gridPos);
+            suitableTuples.Remove(gridPos);
+        }
+        CalculateSuitableTiles(shadowGrid);
+    }
 
+    void CalculateSuitableTiles(List<Tuple<int, int>> suitableCenters)
+    {
+        // +1 lerinde tile yoksa o +1 ler benim için suitabledýr.
+        foreach (var item in suitableCenters)
+        {
+            Tuple<int, int> tupleXNeg = new(item.Item1 + 1, item.Item2);
+            Tuple<int, int> tupleYNeg = new(item.Item1, item.Item2 + 1);
+            Tuple<int, int> tupleXYNeg = new(item.Item1 , item.Item2 - 1);
+
+
+            if (grid.TryGetValue(tupleXNeg, out Tile tileX))
+            {
+                if (!shadowGrid.Contains(tupleXNeg))
+                {
+                    tileX.isSuitable = true;
+                    suitableTuples.Add(tupleXNeg);
+                    tileX.ChangeColor(Color.cyan);
+                }
+            }
+            if (grid.TryGetValue(tupleYNeg, out Tile tileY))
+            {
+                if (!shadowGrid.Contains(tupleYNeg))
+                {
+                    tileY.isSuitable = true;
+                    suitableTuples.Add(tupleYNeg);
+                    tileY.ChangeColor(Color.cyan);
+
+                }
+            }
+            if (grid.TryGetValue(tupleXYNeg, out Tile tileXY))
+            {
+                if (!shadowGrid.Contains(tupleXYNeg))
+                {
+                    tileXY.isSuitable = true;
+                    suitableTuples.Add(tupleXYNeg); 
+                    tileXY.ChangeColor(Color.cyan);
+
+                }
+            }
 
         }
 
-        CalculateSuitableTiles(shadowGrid);
-        UpdateSuitableTiles(grid);
     }
 
 }
