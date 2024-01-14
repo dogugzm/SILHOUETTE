@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,15 +7,26 @@ using UnityEngine;
 public class LevelGenerator : MonoBehaviour
 {
 
-    public static Action<int> OnGenerateLevelCalled;
+    //public static Action<int> OnGenerateLevelCalled;
     [SerializeField] int size;
 
-    void GenerateLevel()
+    [SerializeField] WallGrid wallX;
+    [SerializeField] WallGrid wallZ;
+
+    async void GenerateLevel()
     {
-        OnGenerateLevelCalled?.Invoke(size);
-        // random wall shadow generate(sayý,compx)
-        // clickable center
-        // check finished
+        wallZ.CreateWallAsync();
+        await wallX.CreateWallAsync();
+
+        for (int i = 0; i < size; i++)
+        {
+            await wallX.SetShadowTile(wallX.GetRandomTupleFromSuitable());
+            await UniTask.DelayFrame(1);
+        }
+        // wallX.ShowProceduralShadow();
+        Debug.Log("x shadow length : " + wallX.shadowTuples.Count);
+        wallZ.SetSuitableFromShadow(wallX.shadowTuples);
+        // wallZ.ShowProceduralShadow();
     }
 
     private void Start()

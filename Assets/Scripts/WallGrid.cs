@@ -1,6 +1,9 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using Unity.Mathematics;
 using UnityEngine;
 
 enum ProjectionAxis
@@ -15,7 +18,7 @@ public class WallGrid : MonoBehaviour
     [SerializeField] int size;
     [SerializeField] Tile TilePrefab;
     Dictionary<Tuple<int, int>, Tile> grid = new();
-    public List<Tuple<int, int>> shadowGrid = new();
+    public List<Tuple<int, int>> shadowTuples = new();
 
     [SerializeField] Vector3 startingPositionOffset;
     [SerializeField] Vector3 startingRotationOffset;
@@ -25,31 +28,31 @@ public class WallGrid : MonoBehaviour
 
     private void OnEnable()
     {
-        Instantiator.OnCubeCreatedTriggered += ChangeTileShadow;
-        LevelGenerator.OnGenerateLevelCalled += GenerateRandomShadow;
+        Instantiator.OnCubeCreatedTriggered += SetShadowTile;
+        //LevelGenerator.OnGenerateLevelCalled += StartProceduralShadow;
     }
     private void OnDisable()
     {
-        Instantiator.OnCubeCreatedTriggered -= ChangeTileShadow;
-        LevelGenerator.OnGenerateLevelCalled -= GenerateRandomShadow;
+        Instantiator.OnCubeCreatedTriggered -= SetShadowTile;
+        //LevelGenerator.OnGenerateLevelCalled -= StartProceduralShadow;
     }
     private void Start()
     {
         transform.SetPositionAndRotation(startingPositionOffset, Quaternion.Euler(startingRotationOffset));
     }
 
-    private async void GenerateRandomShadow(int pSize)
+    public void ShowProceduralShadow()
     {
-        await CreateWallAsync();
-
-        for (int i = 0; i < pSize; i++)
+        for (int i = 0; i < shadowTuples.Count; i++)
         {
-            Tuple<int, int> randomPos = GenerateUniqueRandomPosition();
-            ChangeTileShadow(randomPos);
+            if (grid.TryGetValue(shadowTuples[i], out Tile tile))
+            {
+                tile.ChangeColor(Color.grey);
+            }
         }
-        
     }
-    private async UniTask CreateWallAsync()
+
+    public async UniTask CreateWallAsync()
     {
         int randomJ = UnityEngine.Random.Range(0, size);
         for (int i = 0; i < size; i++)
@@ -61,12 +64,12 @@ public class WallGrid : MonoBehaviour
                 instantiatedTile.name = "Tile" + i + "_" + j;
                 Tuple<int, int> instantiatedTuple = new(i, j);
                 grid.Add(instantiatedTuple, instantiatedTile);
-                if ((i == 0) && (j == randomJ))
-                {
-                    instantiatedTile.isSuitable = true;
-                    suitableTuples.Add(instantiatedTuple);
-                    Debug.Log("suitable setted");
-                }
+                //if ((i == 0) && (j == randomJ))
+                //{
+                //    instantiatedTile.isSuitable = true;
+                //    suitableTuples.Add(instantiatedTuple);
+                //    Debug.Log("suitable setted");
+                //}
 
                 // Wait for the next frame
                 await UniTask.DelayFrame(5);
@@ -74,26 +77,30 @@ public class WallGrid : MonoBehaviour
         }
     }
 
-
-    private Tuple<int, int> GenerateUniqueRandomPosition()
+    public Tuple<int, int> GetRandomTupleFromSuitable()
     {
-        // get random tuple from suitable tile
-        Debug.Log(suitableTuples.Count);
-        Tuple<int, int> randomPos = suitableTuples[UnityEngine.Random.Range(0, suitableTuples.Count)];
-        
-
-
-        if (shadowGrid.Contains(randomPos))
+        if (suitableTuples.Count == 0)
         {
-            // If the position is already in the shadowGrid, recursively call the method again to generate a new position.
-            return GenerateUniqueRandomPosition();
+            Tuple<int, int> randomFirstTuple = new(0, UnityEngine.Random.Range(0, size));
+            suitableTuples.Add(randomFirstTuple);
+            if (grid.TryGetValue(randomFirstTuple,out Tile value))
+            {
+                value.ChangeColor(Color.cyan);
+            }
+        }
+
+        Tuple<int, int> randomPos = suitableTuples[UnityEngine.Random.Range(0, suitableTuples.Count)];
+
+        if (shadowTuples.Contains(randomPos))
+        {
+            return GetRandomTupleFromSuitable();
         }
 
         // If the position is unique, return it.
         return randomPos;
     }
 
-    void ChangeTileShadow(Vector3 position)
+    void SetShadowTile(Vector3 position)
     {
 
         Tuple<int, int> gridPos;
@@ -109,37 +116,68 @@ public class WallGrid : MonoBehaviour
 
         if (grid.TryGetValue(gridPos, out Tile tile))
         {
+            shadowTuples.Add(gridPos);
             tile.ChangeColor(Color.grey);
-            shadowGrid.Add(gridPos);
-
         }
     }
 
-    void ChangeTileShadow(Tuple<int, int> gridPos)
+    public async UniTask SetShadowTile(Tuple<int, int> gridPos)
     {
-
         if (grid.TryGetValue(gridPos, out Tile tile))
         {
-            tile.ChangeColor(Color.grey);
-            shadowGrid.Add(gridPos);
+            shadowTuples.Add(gridPos);
             suitableTuples.Remove(gridPos);
+            tile.ChangeColor(Color.grey);
         }
-        CalculateSuitableTiles(shadowGrid);
+        SetNearSuitablesFromCenter(shadowTuples);
+        await UniTask.DelayFrame(50);
+
+
     }
 
-    void CalculateSuitableTiles(List<Tuple<int, int>> suitableCenters)
+    public async void SetSuitableFromShadow(List<Tuple<int, int>> shadows)
+    {
+        //check max of shadows item1 and control shadow2's height
+        //heightlar heð eþit olmak zorunda
+
+        foreach (var item in shadows)
+        {
+            Debug.Log(item);
+            if (suitableTuples.Any(tuple => tuple.Item2 == item.Item2))
+            {
+                var suitableOnRow = suitableTuples.Where(tuple => tuple.Item2 == item.Item2);
+                //it can be 2 times as well
+                Tuple<int, int> tupleRandom = suitableOnRow.ElementAt(UnityEngine.Random.Range(0, suitableOnRow.Count()));
+                SetShadowTile(tupleRandom);
+                await UniTask.DelayFrame(50);
+
+                continue;
+            }
+
+            int y = item.Item1;
+            int x = UnityEngine.Random.Range(0, size - 1);
+
+            //it can be 2 times also.
+            Tuple<int, int> firstShadowTuple = new(x,y);
+            SetShadowTile(firstShadowTuple);
+
+            await UniTask.DelayFrame(50);
+
+        }
+    }
+
+    void SetNearSuitablesFromCenter(List<Tuple<int, int>> suitableCenters)
     {
         // +1 lerinde tile yoksa o +1 ler benim için suitabledýr.
         foreach (var item in suitableCenters)
         {
             Tuple<int, int> tupleXNeg = new(item.Item1 + 1, item.Item2);
             Tuple<int, int> tupleYNeg = new(item.Item1, item.Item2 + 1);
-            Tuple<int, int> tupleXYNeg = new(item.Item1 , item.Item2 - 1);
-
+            Tuple<int, int> tupleXYNeg = new(item.Item1, item.Item2 - 1);
 
             if (grid.TryGetValue(tupleXNeg, out Tile tileX))
             {
-                if (!shadowGrid.Contains(tupleXNeg))
+                if (!shadowTuples.Contains(tupleXNeg))
                 {
                     tileX.isSuitable = true;
                     suitableTuples.Add(tupleXNeg);
@@ -148,7 +186,7 @@ public class WallGrid : MonoBehaviour
             }
             if (grid.TryGetValue(tupleYNeg, out Tile tileY))
             {
-                if (!shadowGrid.Contains(tupleYNeg))
+                if (!shadowTuples.Contains(tupleYNeg))
                 {
                     tileY.isSuitable = true;
                     suitableTuples.Add(tupleYNeg);
@@ -158,10 +196,10 @@ public class WallGrid : MonoBehaviour
             }
             if (grid.TryGetValue(tupleXYNeg, out Tile tileXY))
             {
-                if (!shadowGrid.Contains(tupleXYNeg))
+                if (!shadowTuples.Contains(tupleXYNeg))
                 {
                     tileXY.isSuitable = true;
-                    suitableTuples.Add(tupleXYNeg); 
+                    suitableTuples.Add(tupleXYNeg);
                     tileXY.ChangeColor(Color.cyan);
 
                 }
