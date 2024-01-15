@@ -20,6 +20,9 @@ public class WallGrid : MonoBehaviour
     Dictionary<Tuple<int, int>, Tile> grid = new();
     public List<Tuple<int, int>> shadowTuples = new();
 
+    int maxXValue = 0;
+    int maxYValue = 0;
+
     [SerializeField] Vector3 startingPositionOffset;
     [SerializeField] Vector3 startingRotationOffset;
     [SerializeField] ProjectionAxis projectionAxis;
@@ -72,7 +75,7 @@ public class WallGrid : MonoBehaviour
                 //}
 
                 // Wait for the next frame
-                await UniTask.DelayFrame(5);
+                await UniTask.DelayFrame(2);
             }
         }
     }
@@ -110,13 +113,21 @@ public class WallGrid : MonoBehaviour
         }
         else
         {
-            gridPos = new Tuple<int, int>((int)position.x, (int)position.y);
+            gridPos = new Tuple<int, int>((int)position.y, (int)position.x);
 
         }
 
         if (grid.TryGetValue(gridPos, out Tile tile))
         {
             shadowTuples.Add(gridPos);
+            if (gridPos.Item1> maxXValue)
+            {
+                maxXValue = gridPos.Item1;
+            }
+            if (gridPos.Item2 > maxYValue)
+            {
+                maxYValue = gridPos.Item2;
+            }
             tile.ChangeColor(Color.grey);
         }
     }
@@ -126,11 +137,19 @@ public class WallGrid : MonoBehaviour
         if (grid.TryGetValue(gridPos, out Tile tile))
         {
             shadowTuples.Add(gridPos);
+            if (gridPos.Item1 > maxXValue)
+            {
+                maxXValue = gridPos.Item1;
+            }
+            if (gridPos.Item2 > maxYValue)
+            {
+                maxYValue = gridPos.Item2;
+            }
             suitableTuples.Remove(gridPos);
             tile.ChangeColor(Color.grey);
         }
         SetNearSuitablesFromCenter(shadowTuples);
-        await UniTask.DelayFrame(50);
+        await UniTask.DelayFrame(10);
 
 
     }
@@ -138,32 +157,40 @@ public class WallGrid : MonoBehaviour
     public async void SetSuitableFromShadow(List<Tuple<int, int>> shadows)
     {
         //check max of shadows item1 and control shadow2's height
-        //heightlar heð eþit olmak zorunda
+        //heightlar hep eþit olmak zorunda
+        bool firstTime = true;
 
         foreach (var item in shadows)
         {
             Debug.Log(item);
-            if (suitableTuples.Any(tuple => tuple.Item2 == item.Item2))
+
+            if (firstTime)
             {
-                var suitableOnRow = suitableTuples.Where(tuple => tuple.Item2 == item.Item2);
+                int x = item.Item1;
+                int y = UnityEngine.Random.Range(0, size - 1);
+
+                //it can be 2 times also.
+                Tuple<int, int> firstShadowTuple = new(x, y);
+                SetShadowTile(firstShadowTuple);
+                firstTime = false;
+                continue;
+            }
+
+            if (suitableTuples.Any(tuple => tuple.Item1 == item.Item1))
+            {
+                var suitableOnRow = suitableTuples.Where(tuple => tuple.Item1 == item.Item1);
                 //it can be 2 times as well
                 Tuple<int, int> tupleRandom = suitableOnRow.ElementAt(UnityEngine.Random.Range(0, suitableOnRow.Count()));
                 SetShadowTile(tupleRandom);
-                await UniTask.DelayFrame(50);
+                await UniTask.DelayFrame(10);
 
                 continue;
             }
 
-            int y = item.Item1;
-            int x = UnityEngine.Random.Range(0, size - 1);
-
-            //it can be 2 times also.
-            Tuple<int, int> firstShadowTuple = new(x,y);
-            SetShadowTile(firstShadowTuple);
-
-            await UniTask.DelayFrame(50);
+            await UniTask.DelayFrame(10);
 
         }
+
     }
 
     void SetNearSuitablesFromCenter(List<Tuple<int, int>> suitableCenters)
