@@ -18,14 +18,14 @@ public class LevelGenerator : MonoBehaviour
         wallZ.CreateWallAsync();
         await wallX.CreateWallAsync();
 
-        //for (int i = 0; i < size; i++)
-        //{
-        //    await wallX.SetShadowTile(wallX.GetRandomTupleFromSuitable());
-        //    await UniTask.DelayFrame(1);
-        //}
-        //// wallX.ShowProceduralShadow();
-        //Debug.Log("x shadow length : " + wallX.shadowTuples.Count);
-        //wallZ.SetSuitableFromShadow(wallX.shadowTuples);
+        for (int i = 0; i < size; i++)
+        {
+            await wallX.SetShadowTile(wallX.GetRandomTupleFromSuitable());
+            await UniTask.DelayFrame(1);
+        }
+        // wallX.ShowProceduralShadow();
+        Debug.Log("x shadow length : " + wallX.shadowTuples.Count);
+        wallZ.SetSuitableFromShadow(wallX.shadowTuples);
     }
 
     private void Start()

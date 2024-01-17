@@ -50,7 +50,7 @@ public class WallGrid : MonoBehaviour
         {
             if (grid.TryGetValue(shadowTuples[i], out Tile tile))
             {
-                tile.ChangeColor(Color.grey);
+                tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
             }
         }
     }
@@ -88,7 +88,7 @@ public class WallGrid : MonoBehaviour
             suitableTuples.Add(randomFirstTuple);
             if (grid.TryGetValue(randomFirstTuple,out Tile value))
             {
-                value.ChangeColor(Color.cyan);
+                value.ChangeColor(COLOR_TYPES.NEAR_COLOR);
             }
         }
 
@@ -114,22 +114,27 @@ public class WallGrid : MonoBehaviour
         else
         {
             gridPos = new Tuple<int, int>((int)position.y, (int)position.x);
-
         }
 
         if (grid.TryGetValue(gridPos, out Tile tile))
         {
-            shadowTuples.Add(gridPos);
-            if (gridPos.Item1> maxXValue)
+            if (shadowTuples.Contains(gridPos))
             {
-                maxXValue = gridPos.Item1;
+                tile.ChangeColor(COLOR_TYPES.HARD_SHADOW);
             }
-            if (gridPos.Item2 > maxYValue)
+            else
             {
-                maxYValue = gridPos.Item2;
+                tile.ChangeColor(COLOR_TYPES.WRONG_COLOR);
             }
-            tile.ChangeColor(Color.grey);
+            //shadowTuples.Add(gridPos);
+            //gridPos ile shadowTuple arrayindeki eleman ayný ? Yeþil : Kýrmýzý
+            //
         }
+    }
+
+    void CheckIfFinished()
+    {
+
     }
 
     public async UniTask SetShadowTile(Tuple<int, int> gridPos)
@@ -146,7 +151,7 @@ public class WallGrid : MonoBehaviour
                 maxYValue = gridPos.Item2;
             }
             suitableTuples.Remove(gridPos);
-            tile.ChangeColor(Color.grey);
+            tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
         }
         SetNearSuitablesFromCenter(shadowTuples);
         await UniTask.DelayFrame(10);
@@ -208,7 +213,7 @@ public class WallGrid : MonoBehaviour
                 {
                     tileX.isSuitable = true;
                     suitableTuples.Add(tupleXNeg);
-                    tileX.ChangeColor(Color.cyan);
+                    tileX.ChangeColor(COLOR_TYPES.NEAR_COLOR);
                 }
             }
             if (grid.TryGetValue(tupleYNeg, out Tile tileY))
@@ -217,7 +222,7 @@ public class WallGrid : MonoBehaviour
                 {
                     tileY.isSuitable = true;
                     suitableTuples.Add(tupleYNeg);
-                    tileY.ChangeColor(Color.cyan);
+                    tileY.ChangeColor(COLOR_TYPES.NEAR_COLOR);
 
                 }
             }
@@ -227,7 +232,7 @@ public class WallGrid : MonoBehaviour
                 {
                     tileXY.isSuitable = true;
                     suitableTuples.Add(tupleXYNeg);
-                    tileXY.ChangeColor(Color.cyan);
+                    tileXY.ChangeColor(COLOR_TYPES.NEAR_COLOR);
 
                 }
             }

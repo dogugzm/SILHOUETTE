@@ -9,7 +9,6 @@ public class Instantiator : MonoBehaviour
 
     public static Action<Vector3> OnCubeCreatedTriggered;
 
-
     List<Vector3> InstantiatedCubes = new();
 
     private void Update()
@@ -29,7 +28,6 @@ public class Instantiator : MonoBehaviour
 
         }
     }
-
 
     void CreateCube(Vector3 position)
     {
