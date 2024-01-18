@@ -20,6 +20,11 @@ public class WallGrid : MonoBehaviour
     Dictionary<Tuple<int, int>, Tile> grid = new();
     public List<Tuple<int, int>> shadowTuples = new();
 
+    public List<Tuple<int, int>> correctTuples = new();
+    public bool isCompleted = false;
+
+    public Action WallCompleted;
+
     int maxXValue = 0;
     int maxYValue = 0;
 
@@ -34,6 +39,7 @@ public class WallGrid : MonoBehaviour
         Instantiator.OnCubeCreatedTriggered += SetShadowTile;
         //LevelGenerator.OnGenerateLevelCalled += StartProceduralShadow;
     }
+
     private void OnDisable()
     {
         Instantiator.OnCubeCreatedTriggered -= SetShadowTile;
@@ -67,14 +73,7 @@ public class WallGrid : MonoBehaviour
                 instantiatedTile.name = "Tile" + i + "_" + j;
                 Tuple<int, int> instantiatedTuple = new(i, j);
                 grid.Add(instantiatedTuple, instantiatedTile);
-                //if ((i == 0) && (j == randomJ))
-                //{
-                //    instantiatedTile.isSuitable = true;
-                //    suitableTuples.Add(instantiatedTuple);
-                //    Debug.Log("suitable setted");
-                //}
-
-                // Wait for the next frame
+                
                 await UniTask.DelayFrame(2);
             }
         }
@@ -86,7 +85,7 @@ public class WallGrid : MonoBehaviour
         {
             Tuple<int, int> randomFirstTuple = new(0, UnityEngine.Random.Range(0, size));
             suitableTuples.Add(randomFirstTuple);
-            if (grid.TryGetValue(randomFirstTuple,out Tile value))
+            if (grid.TryGetValue(randomFirstTuple, out Tile value))
             {
                 value.ChangeColor(COLOR_TYPES.NEAR_COLOR);
             }
@@ -103,9 +102,22 @@ public class WallGrid : MonoBehaviour
         return randomPos;
     }
 
+    public async UniTask ClearWall()
+    {
+        Debug.Log("Wall Cleared");
+        foreach (var item in grid)
+        {
+            Destroy(item.Value.gameObject);
+        }
+        grid.Clear();
+        shadowTuples.Clear();
+        correctTuples.Clear();
+        suitableTuples.Clear();
+        isCompleted = false;    
+    }
+
     void SetShadowTile(Vector3 position)
     {
-
         Tuple<int, int> gridPos;
         if (projectionAxis is ProjectionAxis.XBased)
         {
@@ -121,20 +133,38 @@ public class WallGrid : MonoBehaviour
             if (shadowTuples.Contains(gridPos))
             {
                 tile.ChangeColor(COLOR_TYPES.HARD_SHADOW);
+                if (!correctTuples.Contains(gridPos))
+                {
+                    correctTuples.Add(gridPos);
+                }
             }
             else
             {
                 tile.ChangeColor(COLOR_TYPES.WRONG_COLOR);
             }
-            //shadowTuples.Add(gridPos);
-            //gridPos ile shadowTuple arrayindeki eleman ayný ? Yeþil : Kýrmýzý
-            //
+
         }
+
+        if (AreTuplesEqual(shadowTuples, correctTuples))
+        {
+            isCompleted = true;
+            WallCompleted?.Invoke();
+        }
+
     }
 
-    void CheckIfFinished()
+    bool AreTuplesEqual(List<Tuple<int, int>> list1, List<Tuple<int, int>> list2)
     {
+        // Listenin uzunluðunu kontrol et
+        if (list1.Count != list2.Count)
+            return false;
 
+        // Convert lists to sets for unordered comparison
+        HashSet<Tuple<int, int>> set1 = new(list1);
+        HashSet<Tuple<int, int>> set2 = new(list2);
+
+        // Check if the sets are equal
+        return set1.SetEquals(set2);
     }
 
     public async UniTask SetShadowTile(Tuple<int, int> gridPos)

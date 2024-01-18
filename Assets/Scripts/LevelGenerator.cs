@@ -7,7 +7,7 @@ using UnityEngine;
 public class LevelGenerator : MonoBehaviour
 {
 
-    //public static Action<int> OnGenerateLevelCalled;
+    public static Action LevelFinished;
     [SerializeField] int size;
 
     [SerializeField] WallGrid wallX;
@@ -28,10 +28,49 @@ public class LevelGenerator : MonoBehaviour
         wallZ.SetSuitableFromShadow(wallX.shadowTuples);
     }
 
+    
+
+    private void OnEnable()
+    {
+        wallX.WallCompleted += CheckIfGameFinished;
+        wallZ.WallCompleted += CheckIfGameFinished;
+
+    }
+
+    private void OnDisable()
+    {
+        wallX.WallCompleted -= CheckIfGameFinished;
+        wallZ.WallCompleted -= CheckIfGameFinished;
+    }
+
     private void Start()
     {
         GenerateLevel();
     }
+
+    async void CheckIfGameFinished()
+    {
+        if (wallX.isCompleted && wallZ.isCompleted)
+        {
+            Debug.Log("LEVEL FINISHED");
+            LevelFinished?.Invoke();
+            await CleanOldLevel();
+            LoadNewLevel();
+        }
+    }
+
+    private async UniTask CleanOldLevel()
+    {
+        await wallX.ClearWall();
+        await wallZ.ClearWall();
+    }
+
+    void LoadNewLevel()
+    {
+        GenerateLevel();
+    }
+
+
 
 
 

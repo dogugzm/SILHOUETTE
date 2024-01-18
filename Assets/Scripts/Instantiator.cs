@@ -9,7 +9,32 @@ public class Instantiator : MonoBehaviour
 
     public static Action<Vector3> OnCubeCreatedTriggered;
 
-    List<Vector3> InstantiatedCubes = new();
+    List<Vector3> InstantiatedCubePositions = new();
+    List<GameObject> InstantiatedCubes = new();
+
+
+    private void OnEnable()
+    {
+        LevelGenerator.LevelFinished += OnLevelFinished;
+    }
+
+    private void OnLevelFinished()
+    {
+        foreach (var item in InstantiatedCubes)
+        {
+            Destroy(item);
+        }
+
+        InstantiatedCubePositions.Clear();
+        InstantiatedCubes.Clear();
+
+    }
+
+    private void OnDisable()
+    {
+        LevelGenerator.LevelFinished -= OnLevelFinished;
+
+    }
 
     private void Update()
     {
@@ -31,13 +56,14 @@ public class Instantiator : MonoBehaviour
 
     void CreateCube(Vector3 position)
     {
-        if (InstantiatedCubes.Contains(position))
+        if (InstantiatedCubePositions.Contains(position))
         {
             Debug.Log("Not On Same Position");
             return;
         }
         GameObject instantiatedGO = Instantiate(CubePrefab, position, Quaternion.identity);
-        InstantiatedCubes.Add(position);
+        InstantiatedCubes.Add(instantiatedGO);
+        InstantiatedCubePositions.Add(position);
         Debug.Log("Instantiated with pos: " +  position);
         OnCubeCreatedTriggered.Invoke(instantiatedGO.transform.position);
     }
