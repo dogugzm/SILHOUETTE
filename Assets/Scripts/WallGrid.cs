@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 enum ProjectionAxis
 {
@@ -37,12 +38,16 @@ public class WallGrid : MonoBehaviour
     private void OnEnable()
     {
         Instantiator.OnCubeCreatedTriggered += SetShadowTile;
+        Instantiator.OnCubeDeletedTriggered += RemoveShadowTile;
+
         //LevelGenerator.OnGenerateLevelCalled += StartProceduralShadow;
     }
 
     private void OnDisable()
     {
         Instantiator.OnCubeCreatedTriggered -= SetShadowTile;
+        Instantiator.OnCubeDeletedTriggered -= RemoveShadowTile;
+
         //LevelGenerator.OnGenerateLevelCalled -= StartProceduralShadow;
     }
     private void Start()
@@ -153,6 +158,45 @@ public class WallGrid : MonoBehaviour
 
     }
 
+    private void RemoveShadowTile(Vector3 position)
+    {
+        Tuple<int, int> gridPos;
+        if (projectionAxis is ProjectionAxis.XBased)
+        {
+            gridPos = new Tuple<int, int>((int)position.y, (int)position.z);
+        }
+        else
+        {
+            gridPos = new Tuple<int, int>((int)position.y, (int)position.x);
+        }
+
+        if (grid.TryGetValue(gridPos, out Tile tile))
+        {
+            if (shadowTuples.Contains(gridPos))
+            {
+                //shadowTuples.Remove(gridPos);
+                tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
+                if (correctTuples.Contains(gridPos))
+                {
+                    correctTuples.Remove(gridPos);
+                }
+            }
+            else
+            {
+                tile.ChangeColor(COLOR_TYPES.DEFAULT);
+            }
+
+        }
+
+        if (AreTuplesEqual(shadowTuples, correctTuples))
+        {
+            isCompleted = true;
+            WallCompleted?.Invoke();
+        }
+
+    }
+
+
     bool AreTuplesEqual(List<Tuple<int, int>> list1, List<Tuple<int, int>> list2)
     {
         // Listenin uzunluðunu kontrol et
@@ -166,6 +210,7 @@ public class WallGrid : MonoBehaviour
         // Check if the sets are equal
         return set1.SetEquals(set2);
     }
+
 
     public async UniTask SetShadowTile(Tuple<int, int> gridPos)
     {
