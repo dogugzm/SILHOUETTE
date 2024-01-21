@@ -63,7 +63,7 @@ public class Instantiator : MonoBehaviour
                 scalingStarted = true;
                 if (clickedCube.TryGetComponent(out Cube cube))
                 {
-                    cube.ChangeColor(Color.red, destroyMaxTimer, scalingStarted);
+                    cube.ChangeColor(Color.red, destroyMaxTimer);
                 }
             }
             if (destroyTimer > destroyMaxTimer)
@@ -79,11 +79,16 @@ public class Instantiator : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0))
         {
-            scalingStarted = false;
+            if (scalingStarted)
+            {
+                scalingStarted = false;
+                if (clickedCube.TryGetComponent(out Cube cube))
+                {
+                    cube.ChangeColor(Color.yellow, destroyMaxTimer);
+                }
+            }
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 if (hit.transform.gameObject != clickedCube)
                 {

@@ -28,8 +28,6 @@ public class LevelGenerator : MonoBehaviour
         wallZ.SetSuitableFromShadow(wallX.shadowTuples);
     }
 
-    
-
     private void OnEnable()
     {
         wallX.WallCompleted += CheckIfGameFinished;

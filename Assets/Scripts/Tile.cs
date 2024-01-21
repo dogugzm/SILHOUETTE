@@ -11,7 +11,6 @@ public enum COLOR_TYPES
     DEFAULT
 }
 
-
 public class Tile : MonoBehaviour
 {
 
@@ -24,11 +23,9 @@ public class Tile : MonoBehaviour
     [SerializeField] Color wrongColor;
     [SerializeField] Color defaultColor;
 
-
     private void Start()
     {
         renderers = GetComponentsInChildren<MeshRenderer>();
-
     }
 
     Color GetColor(COLOR_TYPES color)

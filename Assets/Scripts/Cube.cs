@@ -19,9 +19,9 @@ public class Cube : MonoBehaviour
     /// <param name="color"></param>
     /// <param name="time"></param>
     /// <param name="boolCheck">bool parameter to make it !bool after completed</param>
-    public void ChangeColor(Color color,float time,bool boolCheck)
+    public void ChangeColor(Color color,float time)
     {
-        renderer.material.DOColor(color, time).OnComplete(() => boolCheck = !boolCheck);
+        renderer.material.DOColor(color, time);
     }
 
 
