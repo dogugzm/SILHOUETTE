@@ -14,7 +14,6 @@ public class Instantiator : MonoBehaviour
     public static Action<Vector3> OnCubeCreatedTriggered;
     public static Action<Vector3> OnCubeDeletedTriggered;
 
-
     List<Vector3> InstantiatedCubePositions = new();
     List<GameObject> InstantiatedCubes = new();
 
@@ -61,8 +60,11 @@ public class Instantiator : MonoBehaviour
             destroyTimer += Time.deltaTime;
             if (!scalingStarted)
             {
-                clickedCube.transform.DOScale(clickedCube.transform.lossyScale.magnitude * 80 / 100, destroyMaxTimer).OnComplete(()=> scalingStarted = false);
                 scalingStarted = true;
+                if (clickedCube.TryGetComponent(out Cube cube))
+                {
+                    cube.ChangeColor(Color.red, destroyMaxTimer, scalingStarted);
+                }
             }
             if (destroyTimer > destroyMaxTimer)
             {
@@ -117,7 +119,6 @@ public class Instantiator : MonoBehaviour
         InstantiatedCubes.Remove(cube);
         InstantiatedCubePositions.Remove(cube.transform.position);
         OnCubeDeletedTriggered.Invoke(cube.transform.position);
-
     }
 
 }

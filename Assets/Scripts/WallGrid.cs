@@ -181,6 +181,10 @@ public class WallGrid : MonoBehaviour
                     correctTuples.Remove(gridPos);
                 }
             }
+            else if (suitableTuples.Contains(gridPos))
+            {
+                tile.ChangeColor(COLOR_TYPES.NEAR_COLOR);
+            }
             else
             {
                 tile.ChangeColor(COLOR_TYPES.DEFAULT);
