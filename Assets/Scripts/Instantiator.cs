@@ -17,9 +17,10 @@ public class Instantiator : MonoBehaviour
     List<Vector3> InstantiatedCubePositions = new();
     List<GameObject> InstantiatedCubes = new();
 
-    private float destroyTimer = 0;
+    public float destroyTimer = 0;
     [SerializeField] private float destroyMaxTimer;
     private bool scalingStarted = false;
+    bool canInstantiate = false;
 
     private void OnEnable()
     {
@@ -52,6 +53,7 @@ public class Instantiator : MonoBehaviour
             if (Physics.Raycast(ray, out RaycastHit hit))
             {             
                 clickedCube = hit.transform.gameObject;
+                canInstantiate = true;
             }
         }
 
@@ -66,7 +68,7 @@ public class Instantiator : MonoBehaviour
                     cube.ChangeColor(Color.red, destroyMaxTimer);
                 }
             }
-            if (destroyTimer > destroyMaxTimer)
+            if (destroyTimer >= destroyMaxTimer)
             {
                 if (clickedCube != null)
                 {
@@ -75,17 +77,27 @@ public class Instantiator : MonoBehaviour
                 }
                 destroyTimer = 0;
             }
+           
         }
 
         if (Input.GetMouseButtonUp(0))
         {
+            if (destroyTimer > 0.3f && destroyTimer < destroyMaxTimer)
+            {
+                canInstantiate = false;
+                destroyTimer = 0;
+            }
             if (scalingStarted)
             {
                 scalingStarted = false;
                 if (clickedCube.TryGetComponent(out Cube cube))
                 {
-                    cube.ChangeColor(Color.yellow, destroyMaxTimer);
+                    cube.ChangeColor(Color.white, destroyMaxTimer);
                 }
+            }
+            if (!canInstantiate)
+            {
+                return;
             }
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
@@ -96,8 +108,14 @@ public class Instantiator : MonoBehaviour
                 }
                 Vector3 intersectionNormal = hit.normal;
                 Vector3 intersectionPoint = hit.transform.position;
-
-                CreateCube(intersectionPoint + intersectionNormal);
+                if (hit.transform.TryGetComponent<Cube>(out Cube cube))
+                {
+                    CreateCube(intersectionPoint + intersectionNormal);
+                }
+                else
+                {
+                    CreateCube(intersectionPoint);
+                }
             }
 
         }
