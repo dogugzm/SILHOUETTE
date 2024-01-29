@@ -15,13 +15,12 @@ enum ProjectionAxis
 
 public class WallGrid : MonoBehaviour
 {
-
     [SerializeField] int size;
     [SerializeField] Tile TilePrefab;
     Dictionary<Tuple<int, int>, Tile> grid = new();
     public List<Tuple<int, int>> shadowTuples = new();
-
     public List<Tuple<int, int>> correctTuples = new();
+
     public bool isCompleted = false;
 
     public Action WallCompleted;
@@ -34,6 +33,7 @@ public class WallGrid : MonoBehaviour
     [SerializeField] ProjectionAxis projectionAxis;
 
     public List<Tuple<int, int>> suitableTuples = new List<Tuple<int, int>>();
+
 
     private void OnEnable()
     {
@@ -50,24 +50,16 @@ public class WallGrid : MonoBehaviour
 
         //LevelGenerator.OnGenerateLevelCalled -= StartProceduralShadow;
     }
+
     private void Start()
     {
         transform.SetPositionAndRotation(startingPositionOffset, Quaternion.Euler(startingRotationOffset));
     }
 
-    public void ShowProceduralShadow()
-    {
-        for (int i = 0; i < shadowTuples.Count; i++)
-        {
-            if (grid.TryGetValue(shadowTuples[i], out Tile tile))
-            {
-                tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
-            }
-        }
-    }
-
     public async UniTask CreateWallAsync()
     {
+
+
         int randomJ = UnityEngine.Random.Range(0, size);
         for (int i = 0; i < size; i++)
         {
@@ -84,7 +76,7 @@ public class WallGrid : MonoBehaviour
         }
     }
 
-    public Tuple<int, int> GetRandomTupleFromSuitable()
+    public Tuple<int, int> GetTupleFromNears()
     {
         if (suitableTuples.Count == 0)
         {
@@ -92,7 +84,7 @@ public class WallGrid : MonoBehaviour
             suitableTuples.Add(randomFirstTuple);
             if (grid.TryGetValue(randomFirstTuple, out Tile value))
             {
-                value.ChangeColor(COLOR_TYPES.NEAR_COLOR);
+                //value.ChangeColor(COLOR_TYPES.NEAR_COLOR);
             }
         }
 
@@ -100,7 +92,7 @@ public class WallGrid : MonoBehaviour
 
         if (shadowTuples.Contains(randomPos))
         {
-            return GetRandomTupleFromSuitable();
+            return GetTupleFromNears();
         }
 
         // If the position is unique, return it.
@@ -123,21 +115,13 @@ public class WallGrid : MonoBehaviour
 
     void SetShadowTile(Vector3 position)
     {
-        Tuple<int, int> gridPos;
-        if (projectionAxis is ProjectionAxis.XBased)
-        {
-            gridPos = new Tuple<int, int>((int)position.y, (int)position.z);
-        }
-        else
-        {
-            gridPos = new Tuple<int, int>((int)position.y, (int)position.x);
-        }
+        Tuple<int, int> gridPos = GetTupleFromVector3(position);
 
         if (grid.TryGetValue(gridPos, out Tile tile))
         {
             if (shadowTuples.Contains(gridPos))
             {
-                tile.ChangeColor(COLOR_TYPES.HARD_SHADOW);
+                tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
                 if (!correctTuples.Contains(gridPos))
                 {
                     correctTuples.Add(gridPos);
@@ -150,7 +134,7 @@ public class WallGrid : MonoBehaviour
 
         }
 
-        if (AreTuplesEqual(shadowTuples, correctTuples))
+        if (CompareTuples(shadowTuples, correctTuples))
         {
             isCompleted = true;
             WallCompleted?.Invoke();
@@ -160,61 +144,47 @@ public class WallGrid : MonoBehaviour
 
     private void RemoveShadowTile(Vector3 position)
     {
-        Tuple<int, int> gridPos;
-        if (projectionAxis is ProjectionAxis.XBased)
-        {
-            gridPos = new Tuple<int, int>((int)position.y, (int)position.z);
-        }
-        else
-        {
-            gridPos = new Tuple<int, int>((int)position.y, (int)position.x);
-        }
+        //Tuple<int, int> gridPos = GetTupleFromVector3(position);
 
-        if (grid.TryGetValue(gridPos, out Tile tile))
-        {
-            if (shadowTuples.Contains(gridPos))
-            {
-                //shadowTuples.Remove(gridPos);
-                tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
-                if (correctTuples.Contains(gridPos))
-                {
-                    correctTuples.Remove(gridPos);
-                }
-            }
-            else if (suitableTuples.Contains(gridPos))
-            {
-                tile.ChangeColor(COLOR_TYPES.NEAR_COLOR);
-            }
-            else
-            {
-                tile.ChangeColor(COLOR_TYPES.DEFAULT);
-            }
+        //if (grid.TryGetValue(gridPos, out Tile tile))
+        //{
+        //    int num = shadowTuples.Where(t => t.Item1 == gridPos.Item1).Count();
+        //    if (shadowTuples.Contains(gridPos) && num==1)
+        //    {
+        //        if (num == 1)
+        //        {
+        //            shadowTuples.Remove(gridPos);
+        //            tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
+        //            if (correctTuples.Contains(gridPos))
+        //            {
+        //                correctTuples.Remove(gridPos);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            tile.ChangeColor(COLOR_TYPES.HARD_SHADOW);
 
-        }
+        //        }
+        //    }
 
-        if (AreTuplesEqual(shadowTuples, correctTuples))
-        {
-            isCompleted = true;
-            WallCompleted?.Invoke();
-        }
+        //    else if (suitableTuples.Contains(gridPos))
+        //    {
+        //        tile.ChangeColor(COLOR_TYPES.NEAR_COLOR);
+        //    }
+        //    else
+        //    {
+        //        tile.ChangeColor(COLOR_TYPES.DEFAULT);
+        //    }
+
+        //}
+
+        //if (CompareTuples(shadowTuples, correctTuples))
+        //{
+        //    isCompleted = true;
+        //    WallCompleted?.Invoke();
+        //}
 
     }
-
-
-    bool AreTuplesEqual(List<Tuple<int, int>> list1, List<Tuple<int, int>> list2)
-    {
-        // Listenin uzunluðunu kontrol et
-        if (list1.Count != list2.Count)
-            return false;
-
-        // Convert lists to sets for unordered comparison
-        HashSet<Tuple<int, int>> set1 = new(list1);
-        HashSet<Tuple<int, int>> set2 = new(list2);
-
-        // Check if the sets are equal
-        return set1.SetEquals(set2);
-    }
-
 
     public async UniTask SetShadowTile(Tuple<int, int> gridPos)
     {
@@ -230,18 +200,73 @@ public class WallGrid : MonoBehaviour
                 maxYValue = gridPos.Item2;
             }
             suitableTuples.Remove(gridPos);
-            tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
+            tile.ChangeColor(COLOR_TYPES.WALL_SHADOW);
         }
-        SetNearSuitablesFromCenter(shadowTuples);
+        SetNearTiles(shadowTuples);
         await UniTask.DelayFrame(10);
+    }
 
+    void SetNearTiles(List<Tuple<int, int>> suitableCenters)
+    {
+        // +1 lerinde tile yoksa o +1 ler benim için suitabledýr.
+        foreach (var item in suitableCenters)
+        {
+            Tuple<int, int> tupleXNeg = new(item.Item1 + 1, item.Item2);
+            Tuple<int, int> tupleYNeg = new(item.Item1, item.Item2 + 1);
+            Tuple<int, int> tupleXYNeg = new(item.Item1, item.Item2 - 1);
+
+            if (grid.TryGetValue(tupleXNeg, out Tile tileX))
+            {
+                if (!shadowTuples.Contains(tupleXNeg))
+                {
+                    tileX.isNear = true;
+                    suitableTuples.Add(tupleXNeg);
+                    //tileX.ChangeColor(COLOR_TYPES.NEAR_COLOR);
+                }
+            }
+            if (grid.TryGetValue(tupleYNeg, out Tile tileY))
+            {
+                if (!shadowTuples.Contains(tupleYNeg))
+                {
+                    tileY.isNear = true;
+                    suitableTuples.Add(tupleYNeg);
+                    //tileY.ChangeColor(COLOR_TYPES.NEAR_COLOR);
+
+                }
+            }
+            if (grid.TryGetValue(tupleXYNeg, out Tile tileXY))
+            {
+                if (!shadowTuples.Contains(tupleXYNeg))
+                {
+                    tileXY.isNear = true;
+                    suitableTuples.Add(tupleXYNeg);
+                    //tileXY.ChangeColor(COLOR_TYPES.NEAR_COLOR);
+
+                }
+            }
+
+        }
 
     }
 
-    public async void SetSuitableFromShadow(List<Tuple<int, int>> shadows)
+    bool CompareTuples(List<Tuple<int, int>> list1, List<Tuple<int, int>> list2)
     {
-        //check max of shadows item1 and control shadow2's height
-        //heightlar hep eþit olmak zorunda
+        //farklý uzunluktaki listeler için de çalýþmalý
+
+        // Listenin uzunluðunu kontrol et
+        if (list1.Count != list2.Count)
+            return false;
+
+        // Convert lists to sets for unordered comparison
+        HashSet<Tuple<int, int>> set1 = new(list1);
+        HashSet<Tuple<int, int>> set2 = new(list2);
+
+        // Check if the sets are equal
+        return set1.SetEquals(set2);
+    }
+
+    public async void SetShadowFromOtherWall(List<Tuple<int, int>> shadows,float percantage)
+    {
         bool firstTime = true;
 
         foreach (var item in shadows)
@@ -258,6 +283,16 @@ public class WallGrid : MonoBehaviour
                 SetShadowTile(firstShadowTuple);
                 firstTime = false;
                 continue;
+            }
+
+            if (shadowTuples.Any(tuple => tuple.Item1 == item.Item1))
+            {
+                //ayný sýrada max 1 shadow(hardest)
+                int rndm = UnityEngine.Random.Range(0, 100);
+                if (rndm <= percantage)
+                {
+                    continue;
+                }
             }
 
             if (suitableTuples.Any(tuple => tuple.Item1 == item.Item1))
@@ -277,48 +312,18 @@ public class WallGrid : MonoBehaviour
 
     }
 
-    void SetNearSuitablesFromCenter(List<Tuple<int, int>> suitableCenters)
+    public Tuple<int, int> GetTupleFromVector3(Vector3 position)
     {
-        // +1 lerinde tile yoksa o +1 ler benim için suitabledýr.
-        foreach (var item in suitableCenters)
+        if (projectionAxis is ProjectionAxis.XBased)
         {
-            Tuple<int, int> tupleXNeg = new(item.Item1 + 1, item.Item2);
-            Tuple<int, int> tupleYNeg = new(item.Item1, item.Item2 + 1);
-            Tuple<int, int> tupleXYNeg = new(item.Item1, item.Item2 - 1);
-
-            if (grid.TryGetValue(tupleXNeg, out Tile tileX))
-            {
-                if (!shadowTuples.Contains(tupleXNeg))
-                {
-                    tileX.isSuitable = true;
-                    suitableTuples.Add(tupleXNeg);
-                    tileX.ChangeColor(COLOR_TYPES.NEAR_COLOR);
-                }
-            }
-            if (grid.TryGetValue(tupleYNeg, out Tile tileY))
-            {
-                if (!shadowTuples.Contains(tupleYNeg))
-                {
-                    tileY.isSuitable = true;
-                    suitableTuples.Add(tupleYNeg);
-                    tileY.ChangeColor(COLOR_TYPES.NEAR_COLOR);
-
-                }
-            }
-            if (grid.TryGetValue(tupleXYNeg, out Tile tileXY))
-            {
-                if (!shadowTuples.Contains(tupleXYNeg))
-                {
-                    tileXY.isSuitable = true;
-                    suitableTuples.Add(tupleXYNeg);
-                    tileXY.ChangeColor(COLOR_TYPES.NEAR_COLOR);
-
-                }
-            }
-
+            return new Tuple<int, int>((int)position.y, (int)position.z);
         }
-
+        else
+        {
+            return new Tuple<int, int>((int)position.y, (int)position.x);
+        }
     }
+
 
 }
 

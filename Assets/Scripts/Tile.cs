@@ -1,11 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public enum COLOR_TYPES
 {
     SOFT_SHADOW,
-    HARD_SHADOW,
+    WALL_SHADOW,
     NEAR_COLOR,
     WRONG_COLOR,
     DEFAULT
@@ -13,44 +11,39 @@ public enum COLOR_TYPES
 
 public class Tile : MonoBehaviour
 {
+    //private int tileGrade = 2;
 
-    public MeshRenderer[] renderers;
-    public bool isSuitable = false;
-
-    [SerializeField] Color softShadowColor;
-    [SerializeField] Color hardShadowColor;
+    public MeshRenderer tileRenderer;
+    public bool isNear = false;
+    
     [SerializeField] Color nearColor;
     [SerializeField] Color wrongColor;
     [SerializeField] Color defaultColor;
+    [SerializeField] Color wallShadowColor;
+    [SerializeField] Color hardShadowColor;
 
-    private void Start()
-    {
-        renderers = GetComponentsInChildren<MeshRenderer>();
-    }
 
     Color GetColor(COLOR_TYPES color)
     {
         switch (color)
         {
-            case COLOR_TYPES.SOFT_SHADOW:
-                return softShadowColor;
-            case COLOR_TYPES.HARD_SHADOW:
-                return hardShadowColor;
             case COLOR_TYPES.DEFAULT:
                 return defaultColor;
             case COLOR_TYPES.NEAR_COLOR:
                 return nearColor;
             case COLOR_TYPES.WRONG_COLOR:
                 return wrongColor;
+            case COLOR_TYPES.WALL_SHADOW:
+                return wallShadowColor;
+            case COLOR_TYPES.SOFT_SHADOW:
+                return hardShadowColor;
         }
         return defaultColor;
     }
 
+   
     public void ChangeColor(COLOR_TYPES color)
     {
-        foreach (var renderer in renderers)
-        {
-            renderer.material.color = GetColor(color);
-        }
+        tileRenderer.material.color = GetColor(color);
     }
 }

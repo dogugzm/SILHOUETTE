@@ -41,7 +41,6 @@ public class Instantiator : MonoBehaviour
     private void OnDisable()
     {
         LevelGenerator.LevelFinished -= OnLevelFinished;
-
     }
 
     private void Update()
@@ -65,7 +64,7 @@ public class Instantiator : MonoBehaviour
                 scalingStarted = true;
                 if (clickedCube.TryGetComponent(out Cube cube))
                 {
-                    cube.ChangeColor(Color.red, destroyMaxTimer);
+                    cube.ChangeColor(cube.deleteColor, destroyMaxTimer);
                 }
             }
             if (destroyTimer >= destroyMaxTimer)
@@ -77,7 +76,6 @@ public class Instantiator : MonoBehaviour
                 }
                 destroyTimer = 0;
             }
-           
         }
 
         if (Input.GetMouseButtonUp(0))
@@ -92,7 +90,7 @@ public class Instantiator : MonoBehaviour
                 scalingStarted = false;
                 if (clickedCube.TryGetComponent(out Cube cube))
                 {
-                    cube.ChangeColor(Color.white, destroyMaxTimer);
+                    cube.ChangeColor(cube.defaultColor, destroyMaxTimer);
                 }
             }
             if (!canInstantiate)
@@ -108,7 +106,7 @@ public class Instantiator : MonoBehaviour
                 }
                 Vector3 intersectionNormal = hit.normal;
                 Vector3 intersectionPoint = hit.transform.position;
-                if (hit.transform.TryGetComponent<Cube>(out Cube cube))
+                if (hit.transform.TryGetComponent(out Cube cube))
                 {
                     CreateCube(intersectionPoint + intersectionNormal);
                 }

@@ -1,29 +1,21 @@
 using DG.Tweening;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Cube : MonoBehaviour
 {
+    private MeshRenderer cubeRenderer;
+    [HideInInspector] public Color defaultColor;
+    public Color deleteColor;
 
-    MeshRenderer renderer;
-
-    private void Start()
+    private void Awake()
     {
-        renderer = GetComponent<MeshRenderer>();
+        cubeRenderer = GetComponent<MeshRenderer>();
+        defaultColor = cubeRenderer.material.color;
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="color"></param>
-    /// <param name="time"></param>
-    /// <param name="boolCheck">bool parameter to make it !bool after completed</param>
-    public void ChangeColor(Color color,float time)
+    public void ChangeColor(Color color, float time)
     {
-        renderer.material.DOColor(color, time);
+        cubeRenderer.material.DOColor(color, time);
     }
-
-
 
 }

@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,27 +13,22 @@ public class LevelGenerator : MonoBehaviour
 
     [SerializeField] WallGrid wallX;
     [SerializeField] WallGrid wallZ;
+    [Range(0,100)]
+    [SerializeField] private int percantageOfmultipleShadow;
 
-    async void GenerateLevel()
-    {
-        wallZ.CreateWallAsync();
-        await wallX.CreateWallAsync();
+    public GameObject groundGO;
+    public GameObject ground1;
+    public GameObject ground2;
 
-        for (int i = 0; i < size; i++)
-        {
-            await wallX.SetShadowTile(wallX.GetRandomTupleFromSuitable());
-            await UniTask.DelayFrame(1);
-        }
-        // wallX.ShowProceduralShadow();
-        Debug.Log("x shadow length : " + wallX.shadowTuples.Count);
-        wallZ.SetSuitableFromShadow(wallX.shadowTuples);
-    }
+    public Ease ease;
+    public Ease ease2;
+
+
 
     private void OnEnable()
     {
         wallX.WallCompleted += CheckIfGameFinished;
         wallZ.WallCompleted += CheckIfGameFinished;
-
     }
 
     private void OnDisable()
@@ -45,6 +41,25 @@ public class LevelGenerator : MonoBehaviour
     {
         GenerateLevel();
     }
+
+    async void GenerateLevel()
+    {
+
+        groundGO.transform.DOMove(new Vector3(4, 0, 4), 2f).SetEase(ease);
+        ground1.transform.DOMoveY(-7f, 1f).SetEase(ease2);
+
+        wallZ.CreateWallAsync();
+        ground2.transform.DOMoveY(-7f, 1f).SetEase(ease2);
+        await wallX.CreateWallAsync();
+
+        for (int i = 0; i < size; i++)
+        {
+            await wallX.SetShadowTile(wallX.GetTupleFromNears());
+            await UniTask.DelayFrame(1);
+        }
+        wallZ.SetShadowFromOtherWall(wallX.shadowTuples, percantageOfmultipleShadow);
+    }
+
 
     async void CheckIfGameFinished()
     {
@@ -67,10 +82,6 @@ public class LevelGenerator : MonoBehaviour
     {
         GenerateLevel();
     }
-
-
-
-
 
 
 }
