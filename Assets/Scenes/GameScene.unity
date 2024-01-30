@@ -2010,7 +2010,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36e743cbb87a460439e49efb8cca28ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: 10
+  size: 7
   wallX: {fileID: 671155390}
   wallZ: {fileID: 700489354}
   percantageOfmultipleShadow: 50

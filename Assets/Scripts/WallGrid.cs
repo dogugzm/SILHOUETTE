@@ -28,6 +28,9 @@ public class WallGrid : MonoBehaviour
     int maxXValue = 0;
     int maxYValue = 0;
 
+    //duplicateOnX = InstantiatedCubePositions.Any(pos => pos.x == position.x);
+    //    duplicateOnY = InstantiatedCubePositions.Any(pos => pos.y == position.y);
+
     [SerializeField] Vector3 startingPositionOffset;
     [SerializeField] Vector3 startingRotationOffset;
     [SerializeField] ProjectionAxis projectionAxis;
@@ -121,7 +124,7 @@ public class WallGrid : MonoBehaviour
         {
             if (shadowTuples.Contains(gridPos))
             {
-                tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
+                tile.ChangeColor(COLOR_TYPES.HARD_SHADOW);
                 if (!correctTuples.Contains(gridPos))
                 {
                     correctTuples.Add(gridPos);
@@ -142,47 +145,44 @@ public class WallGrid : MonoBehaviour
 
     }
 
-    private void RemoveShadowTile(Vector3 position)
+    private void RemoveShadowTile(Vector3 position,bool alreadyHaveShadowX, bool alreadyHaveShadowY)
     {
-        //Tuple<int, int> gridPos = GetTupleFromVector3(position);
+        Debug.Log("Removed");
+        Tuple<int, int> gridPos = GetTupleFromVector3(position);
 
-        //if (grid.TryGetValue(gridPos, out Tile tile))
-        //{
-        //    int num = shadowTuples.Where(t => t.Item1 == gridPos.Item1).Count();
-        //    if (shadowTuples.Contains(gridPos) && num==1)
-        //    {
-        //        if (num == 1)
-        //        {
-        //            shadowTuples.Remove(gridPos);
-        //            tile.ChangeColor(COLOR_TYPES.SOFT_SHADOW);
-        //            if (correctTuples.Contains(gridPos))
-        //            {
-        //                correctTuples.Remove(gridPos);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            tile.ChangeColor(COLOR_TYPES.HARD_SHADOW);
+        bool anyOtherShadow = projectionAxis == ProjectionAxis.XBased ? alreadyHaveShadowY : alreadyHaveShadowX; 
 
-        //        }
-        //    }
+        if (grid.TryGetValue(gridPos, out Tile tile))
+        {
+            if (shadowTuples.Contains(gridPos))
+            {
+                if (anyOtherShadow)
+                {
+                    tile.ChangeColor(COLOR_TYPES.HARD_SHADOW);
 
-        //    else if (suitableTuples.Contains(gridPos))
-        //    {
-        //        tile.ChangeColor(COLOR_TYPES.NEAR_COLOR);
-        //    }
-        //    else
-        //    {
-        //        tile.ChangeColor(COLOR_TYPES.DEFAULT);
-        //    }
+                }
+                else
+                {
+                    //shadowTuples.Remove(gridPos);
+                    tile.ChangeColor(COLOR_TYPES.WALL_SHADOW);
+                }
+                if (correctTuples.Contains(gridPos))
+                {
+                    correctTuples.Remove(gridPos);
+                }                         
+            }
+            else
+            {
+                tile.ChangeColor(COLOR_TYPES.DEFAULT);
+            }
 
-        //}
+        }
 
-        //if (CompareTuples(shadowTuples, correctTuples))
-        //{
-        //    isCompleted = true;
-        //    WallCompleted?.Invoke();
-        //}
+        if (CompareTuples(shadowTuples, correctTuples))
+        {
+            isCompleted = true;
+            WallCompleted?.Invoke();
+        }
 
     }
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using DG.Tweening;
+using System.Linq;
 
 
 public class Instantiator : MonoBehaviour
@@ -12,7 +13,7 @@ public class Instantiator : MonoBehaviour
     private GameObject clickedCube;
 
     public static Action<Vector3> OnCubeCreatedTriggered;
-    public static Action<Vector3> OnCubeDeletedTriggered;
+    public static Action<Vector3,bool,bool> OnCubeDeletedTriggered;
 
     List<Vector3> InstantiatedCubePositions = new();
     List<GameObject> InstantiatedCubes = new();
@@ -21,6 +22,9 @@ public class Instantiator : MonoBehaviour
     [SerializeField] private float destroyMaxTimer;
     private bool scalingStarted = false;
     bool canInstantiate = false;
+
+    public bool duplicateOnX { get; private set; }
+    public bool duplicateOnY { get; private set; }
 
     private void OnEnable()
     {
@@ -69,7 +73,7 @@ public class Instantiator : MonoBehaviour
             }
             if (destroyTimer >= destroyMaxTimer)
             {
-                if (clickedCube != null)
+                if (clickedCube != null && clickedCube.TryGetComponent(out Cube cube))
                 {
                     DeleteCube(clickedCube);
                     clickedCube = null;
@@ -129,6 +133,8 @@ public class Instantiator : MonoBehaviour
         }
         GameObject instantiatedGO = Instantiate(CubePrefab, position, Quaternion.identity);
         InstantiatedCubes.Add(instantiatedGO);
+        duplicateOnX = InstantiatedCubePositions.Any(pos => pos.x == position.x);
+        duplicateOnY = InstantiatedCubePositions.Any(pos => pos.y == position.y);
         InstantiatedCubePositions.Add(position);
         Debug.Log("Instantiated with pos: " + position);
         OnCubeCreatedTriggered.Invoke(instantiatedGO.transform.position);
@@ -139,7 +145,9 @@ public class Instantiator : MonoBehaviour
         Destroy(cube);
         InstantiatedCubes.Remove(cube);
         InstantiatedCubePositions.Remove(cube.transform.position);
-        OnCubeDeletedTriggered.Invoke(cube.transform.position);
+        duplicateOnX = InstantiatedCubePositions.Any(pos => pos.x == cube.transform.position.x);
+        duplicateOnY = InstantiatedCubePositions.Any(pos => pos.y == cube.transform.position.y);
+        OnCubeDeletedTriggered.Invoke(cube.transform.position,duplicateOnX,duplicateOnY);
     }
 
 }

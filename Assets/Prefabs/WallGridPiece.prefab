@@ -49,7 +49,7 @@ MonoBehaviour:
   isNear: 0
   nearColor: {r: 0.4185208, g: 0.8962264, b: 0.8598099, a: 0}
   wrongColor: {r: 0.7169812, g: 0.27319974, b: 0.23335709, a: 0}
-  defaultColor: {r: 1, g: 1, b: 1, a: 0}
+  defaultColor: {r: 0.9764706, g: 0.96862745, b: 0.7882353, a: 0}
   wallShadowColor: {r: 0.745283, g: 0.74062735, b: 0.5730242, a: 0}
   hardShadowColor: {r: 0.4339623, g: 0.4298683, b: 0.33775365, a: 0}
 --- !u!1 &8589010966068975744

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public enum COLOR_TYPES
 {
-    SOFT_SHADOW,
+    HARD_SHADOW,
     WALL_SHADOW,
     NEAR_COLOR,
     WRONG_COLOR,
@@ -35,7 +35,7 @@ public class Tile : MonoBehaviour
                 return wrongColor;
             case COLOR_TYPES.WALL_SHADOW:
                 return wallShadowColor;
-            case COLOR_TYPES.SOFT_SHADOW:
+            case COLOR_TYPES.HARD_SHADOW:
                 return hardShadowColor;
         }
         return defaultColor;
