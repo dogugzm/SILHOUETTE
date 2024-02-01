@@ -133,6 +133,7 @@ public class WallGrid : MonoBehaviour
                 if (!correctTuples.Contains(gridPos))
                 {
                     correctTuples.Add(gridPos);
+                    Debug.Log(correctTuples.Count,gameObject);
                 }
             }
             else
@@ -178,12 +179,12 @@ public class WallGrid : MonoBehaviour
                 else
                 {
                     //shadowTuples.Remove(gridPos);
+                    if (correctTuples.Contains(gridPos))
+                    {
+                        correctTuples.Remove(gridPos);
+                    }                         
                     tile.ChangeColor(COLOR_TYPES.WALL_SHADOW);
                 }
-                if (correctTuples.Contains(gridPos))
-                {
-                    correctTuples.Remove(gridPos);
-                }                         
             }
             else if (wrongTuples.Contains(gridPos))
             {
@@ -201,6 +202,7 @@ public class WallGrid : MonoBehaviour
         }
 
         CheckGameFinished();
+        Debug.Log(correctTuples.Count);
 
     }
 
@@ -275,15 +277,13 @@ public class WallGrid : MonoBehaviour
             return false;
         }
 
-        // Listenin uzunluðunu kontrol et
         if (list1.Count != list2.Count)
             return false;
 
-        // Convert lists to sets for unordered comparison
+        //unordered
         HashSet<Tuple<int, int>> set1 = new(list1);
         HashSet<Tuple<int, int>> set2 = new(list2);
 
-        // Check if the sets are equal
         return set1.SetEquals(set2);
     }
 
