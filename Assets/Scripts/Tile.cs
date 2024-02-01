@@ -22,7 +22,6 @@ public class Tile : MonoBehaviour
     [SerializeField] Color wallShadowColor;
     [SerializeField] Color hardShadowColor;
 
-
     Color GetColor(COLOR_TYPES color)
     {
         switch (color)
@@ -41,7 +40,6 @@ public class Tile : MonoBehaviour
         return defaultColor;
     }
 
-   
     public void ChangeColor(COLOR_TYPES color)
     {
         tileRenderer.material.color = GetColor(color);

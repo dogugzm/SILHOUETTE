@@ -18,8 +18,12 @@ public class WallGrid : MonoBehaviour
     [SerializeField] int size;
     [SerializeField] Tile TilePrefab;
     Dictionary<Tuple<int, int>, Tile> grid = new();
+
+    //tuple types can be changable with tile inside enum
     public List<Tuple<int, int>> shadowTuples = new();
     public List<Tuple<int, int>> correctTuples = new();
+    public List<Tuple<int, int>> wrongTuples = new();
+
 
     public bool isCompleted = false;
 
@@ -113,6 +117,7 @@ public class WallGrid : MonoBehaviour
         shadowTuples.Clear();
         correctTuples.Clear();
         suitableTuples.Clear();
+        wrongTuples.Clear();
         isCompleted = false;    
     }
 
@@ -132,17 +137,26 @@ public class WallGrid : MonoBehaviour
             }
             else
             {
+                if (!wrongTuples.Contains(gridPos))
+                {
+                    wrongTuples.Add(gridPos);
+                }
                 tile.ChangeColor(COLOR_TYPES.WRONG_COLOR);
             }
 
         }
 
+        CheckGameFinished();
+
+    }
+
+    private void CheckGameFinished()
+    {
         if (CompareTuples(shadowTuples, correctTuples))
         {
             isCompleted = true;
             WallCompleted?.Invoke();
         }
-
     }
 
     private void RemoveShadowTile(Vector3 position,bool alreadyHaveShadowX, bool alreadyHaveShadowY)
@@ -171,6 +185,14 @@ public class WallGrid : MonoBehaviour
                     correctTuples.Remove(gridPos);
                 }                         
             }
+            else if (wrongTuples.Contains(gridPos))
+            {
+                if (wrongTuples.Contains(gridPos))
+                {
+                    wrongTuples.Remove(gridPos);
+                }
+                tile.ChangeColor(COLOR_TYPES.DEFAULT);
+            }
             else
             {
                 tile.ChangeColor(COLOR_TYPES.DEFAULT);
@@ -178,11 +200,7 @@ public class WallGrid : MonoBehaviour
 
         }
 
-        if (CompareTuples(shadowTuples, correctTuples))
-        {
-            isCompleted = true;
-            WallCompleted?.Invoke();
-        }
+        CheckGameFinished();
 
     }
 
@@ -251,7 +269,11 @@ public class WallGrid : MonoBehaviour
 
     bool CompareTuples(List<Tuple<int, int>> list1, List<Tuple<int, int>> list2)
     {
-        //farklý uzunluktaki listeler için de çalýþmalý
+
+        if (wrongTuples.Count > 0)
+        {
+            return false;
+        }
 
         // Listenin uzunluðunu kontrol et
         if (list1.Count != list2.Count)
