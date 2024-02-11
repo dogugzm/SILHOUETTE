@@ -8,19 +8,20 @@ public class LevelGenerator : MonoBehaviour
 
     public static Action LevelFinished;
     [SerializeField] int size;
-    private int maxSize = 25;
 
     [SerializeField] WallGrid wallX;
     [SerializeField] WallGrid wallZ;
     [Range(0, 100)]
-    private int percantageOfmultipleShadow = 100;
 
     public GameObject groundGO;
     public GameObject ground1;
     public GameObject ground2;
 
-    public Ease ease;
-    public Ease ease2;
+    private int maxSize = 25;
+    private int percantageOfmultipleShadow = 100;
+    bool firstLevel = true;
+    [SerializeField] private Ease ease;
+    [SerializeField] private Ease ease2;
 
 
     private void OnEnable()
@@ -42,17 +43,18 @@ public class LevelGenerator : MonoBehaviour
 
     async void GenerateLevel()
     {
-        groundGO.transform.DOMove(new Vector3(4, 0, 4), 2f).SetEase(ease);
-        ground1.transform.DOMoveY(-7f, 1f).SetEase(ease2);
+        StartFancyMovement();
 
-        wallZ.CreateWallAsync();
-        ground2.transform.DOMoveY(-7f, 1f).SetEase(ease2);
+        if (firstLevel)
+        {
+            wallZ.CreateWallAsync();
 
-        await wallX.CreateWallAsync();
+            await wallX.CreateWallAsync();
+        }
 
         if (percantageOfmultipleShadow == 100)
         {
-            size++; 
+            size++;
         }
         if (size >= 4)
         {
@@ -66,10 +68,19 @@ public class LevelGenerator : MonoBehaviour
         }
 
         wallZ.SetShadowFromOtherWall(wallX.shadowTuples, percantageOfmultipleShadow);
-        if (percantageOfmultipleShadow <=25)
+        if (percantageOfmultipleShadow <= 25)
         {
             percantageOfmultipleShadow = 100;
         }
+        firstLevel = false;
+    }
+
+    private void StartFancyMovement()
+    {
+        groundGO.transform.DOMove(new Vector3(4, 0, 4), 2f).SetEase(ease);
+        ground1.transform.DOMoveY(-7f, 1f).SetEase(ease2);
+
+        ground2.transform.DOMoveY(-7f, 1f).SetEase(ease2);
     }
 
     async void CheckIfGameFinished()
@@ -77,17 +88,13 @@ public class LevelGenerator : MonoBehaviour
         if (wallX.isCompleted && wallZ.isCompleted)
         {
             Debug.Log("LEVEL FINISHED");
+            await UniTask.Delay(1000);
             LevelFinished?.Invoke();
-            await CleanOldLevel();
+            await UniTask.Delay(500);
             GenerateLevel();
         }
     }
 
-    private async UniTask CleanOldLevel()
-    {
-        await wallX.ClearWall();
-        await wallZ.ClearWall();
-    }
 
 
 }

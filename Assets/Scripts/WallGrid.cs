@@ -15,59 +15,50 @@ enum ProjectionAxis
 
 public class WallGrid : MonoBehaviour
 {
-    [SerializeField] int size;
     [SerializeField] Tile TilePrefab;
+    readonly int size = 5;
+
     Dictionary<Tuple<int, int>, Tile> grid = new();
-
-    //tuple types can be changable with tile inside enum
     public List<Tuple<int, int>> shadowTuples = new();
-    public List<Tuple<int, int>> correctTuples = new();
-    public List<Tuple<int, int>> wrongTuples = new();
-
+    private readonly List<Tuple<int, int>> correctTuples = new();
+    private readonly List<Tuple<int, int>> wrongTuples = new();
+    private readonly List<Tuple<int, int>> suitableTuples = new List<Tuple<int, int>>();
 
     public bool isCompleted = false;
 
     public Action WallCompleted;
-
     int maxXValue = 0;
     int maxYValue = 0;
-
-    //duplicateOnX = InstantiatedCubePositions.Any(pos => pos.x == position.x);
-    //    duplicateOnY = InstantiatedCubePositions.Any(pos => pos.y == position.y);
 
     [SerializeField] Vector3 startingPositionOffset;
     [SerializeField] Vector3 startingRotationOffset;
     [SerializeField] ProjectionAxis projectionAxis;
 
-    public List<Tuple<int, int>> suitableTuples = new List<Tuple<int, int>>();
-
 
     private void OnEnable()
     {
-        Instantiator.OnCubeCreatedTriggered += SetShadowTile;
-        Instantiator.OnCubeDeletedTriggered += RemoveShadowTile;
-
-        //LevelGenerator.OnGenerateLevelCalled += StartProceduralShadow;
+        CubeInstantiator.OnCubeCreatedTriggered += SetShadowTile;
+        CubeInstantiator.OnCubeDeletedTriggered += RemoveShadowTile;
+        LevelGenerator.LevelFinished += LevelCompleted;
     }
-
     private void OnDisable()
     {
-        Instantiator.OnCubeCreatedTriggered -= SetShadowTile;
-        Instantiator.OnCubeDeletedTriggered -= RemoveShadowTile;
-
-        //LevelGenerator.OnGenerateLevelCalled -= StartProceduralShadow;
+        CubeInstantiator.OnCubeCreatedTriggered -= SetShadowTile;
+        CubeInstantiator.OnCubeDeletedTriggered -= RemoveShadowTile;
+        LevelGenerator.LevelFinished -= LevelCompleted;
     }
-
     private void Start()
     {
         transform.SetPositionAndRotation(startingPositionOffset, Quaternion.Euler(startingRotationOffset));
     }
 
+    private void LevelCompleted()
+    {
+        ClearWall();
+    }
+
     public async UniTask CreateWallAsync()
     {
-
-
-        int randomJ = UnityEngine.Random.Range(0, size);
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
@@ -77,8 +68,7 @@ public class WallGrid : MonoBehaviour
                 instantiatedTile.name = "Tile" + i + "_" + j;
                 Tuple<int, int> instantiatedTuple = new(i, j);
                 grid.Add(instantiatedTuple, instantiatedTile);
-                
-                await UniTask.DelayFrame(2);
+                await UniTask.Delay(50);
             }
         }
     }
@@ -106,14 +96,15 @@ public class WallGrid : MonoBehaviour
         return randomPos;
     }
 
-    public async UniTask ClearWall()
+    private void ClearWall()
     {
-        Debug.Log("Wall Cleared");
-        foreach (var item in grid)
+        foreach (var item in shadowTuples)
         {
-            Destroy(item.Value.gameObject);
+            if (grid.TryGetValue(item, out Tile tile))
+            {
+                tile.ChangeColor(COLOR_TYPES.DEFAULT);
+            }
         }
-        grid.Clear();
         shadowTuples.Clear();
         correctTuples.Clear();
         suitableTuples.Clear();
@@ -146,15 +137,17 @@ public class WallGrid : MonoBehaviour
             }
 
         }
-
-        CheckGameFinished();
-
+        CheckLevelCompleted();
     }
 
-    private void CheckGameFinished()
+    private void CheckLevelCompleted()
     {
         if (CompareTuples(shadowTuples, correctTuples))
         {
+            if (isCompleted)
+            {
+                return;
+            }
             isCompleted = true;
             WallCompleted?.Invoke();
         }
@@ -162,7 +155,6 @@ public class WallGrid : MonoBehaviour
 
     private void RemoveShadowTile(Vector3 position,bool alreadyHaveShadowX, bool alreadyHaveShadowY)
     {
-        Debug.Log("Removed");
         Tuple<int, int> gridPos = GetTupleFromVector3(position);
 
         bool anyOtherShadow = projectionAxis == ProjectionAxis.XBased ? alreadyHaveShadowY : alreadyHaveShadowX; 
@@ -174,11 +166,9 @@ public class WallGrid : MonoBehaviour
                 if (anyOtherShadow)
                 {
                     tile.ChangeColor(COLOR_TYPES.HARD_SHADOW);
-
                 }
                 else
                 {
-                    //shadowTuples.Remove(gridPos);
                     if (correctTuples.Contains(gridPos))
                     {
                         correctTuples.Remove(gridPos);
@@ -201,8 +191,7 @@ public class WallGrid : MonoBehaviour
 
         }
 
-        CheckGameFinished();
-        Debug.Log(correctTuples.Count);
+        CheckLevelCompleted();
 
     }
 

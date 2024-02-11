@@ -418,6 +418,7 @@ MonoBehaviour:
   CubePrefab: {fileID: 4363069741150968294, guid: 246f002eb64c17b49b73a663674d1f52, type: 3}
   destroyTimer: 0
   destroyMaxTimer: 1.5
+  mainCam: {fileID: 963194227}
 --- !u!1 &309002423
 GameObject:
   m_ObjectHideFlags: 0
@@ -436,7 +437,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &309002424
 Transform:
   m_ObjectHideFlags: 0
@@ -798,7 +799,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 071850c4b741a254c9adbd84982a880b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: 5
   TilePrefab: {fileID: 5697721267777550274, guid: 6b0e4d4d32ff27943af553a30d739323, type: 3}
   isCompleted: 0
   startingPositionOffset: {x: -3, y: 0, z: 0}
@@ -848,7 +848,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 071850c4b741a254c9adbd84982a880b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: 5
   TilePrefab: {fileID: 5697721267777550274, guid: 6b0e4d4d32ff27943af553a30d739323, type: 3}
   isCompleted: 0
   startingPositionOffset: {x: 0, y: 0, z: 8}
@@ -2013,7 +2012,6 @@ MonoBehaviour:
   size: 0
   wallX: {fileID: 671155390}
   wallZ: {fileID: 700489354}
-  percantageOfmultipleShadow: 50
   groundGO: {fileID: 1557266530}
   ground1: {fileID: 1506843850}
   ground2: {fileID: 309002423}
@@ -2072,7 +2070,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1506843851
 Transform:
   m_ObjectHideFlags: 0

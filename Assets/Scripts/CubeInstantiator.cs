@@ -1,19 +1,16 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UIElements;
-using DG.Tweening;
 using System.Linq;
+using UnityEngine;
 
 
-public class Instantiator : MonoBehaviour
+public class CubeInstantiator : MonoBehaviour
 {
     [SerializeField] GameObject CubePrefab;
     private GameObject clickedCube;
 
     public static Action<Vector3> OnCubeCreatedTriggered;
-    public static Action<Vector3,bool,bool> OnCubeDeletedTriggered;
+    public static Action<Vector3, bool, bool> OnCubeDeletedTriggered;
 
     List<Vector3> InstantiatedCubePositions = new();
     List<GameObject> InstantiatedCubes = new();
@@ -26,9 +23,16 @@ public class Instantiator : MonoBehaviour
     public bool duplicateOnX { get; private set; }
     public bool duplicateOnY { get; private set; }
 
+    [SerializeField] private Camera mainCam;
+
     private void OnEnable()
     {
         LevelGenerator.LevelFinished += OnLevelFinished;
+    }
+
+    private void OnDisable()
+    {
+        LevelGenerator.LevelFinished -= OnLevelFinished;
     }
 
     private void OnLevelFinished()
@@ -42,19 +46,14 @@ public class Instantiator : MonoBehaviour
         InstantiatedCubes.Clear();
     }
 
-    private void OnDisable()
-    {
-        LevelGenerator.LevelFinished -= OnLevelFinished;
-    }
-
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
 
             if (Physics.Raycast(ray, out RaycastHit hit))
-            {             
+            {
                 clickedCube = hit.transform.gameObject;
                 canInstantiate = true;
             }
@@ -84,6 +83,10 @@ public class Instantiator : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0))
         {
+            if (clickedCube is null)
+            {
+                return;
+            }
             if (destroyTimer > 0.3f && destroyTimer < destroyMaxTimer)
             {
                 canInstantiate = false;
@@ -101,7 +104,7 @@ public class Instantiator : MonoBehaviour
             {
                 return;
             }
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 if (hit.transform.gameObject != clickedCube)
@@ -147,7 +150,8 @@ public class Instantiator : MonoBehaviour
         InstantiatedCubePositions.Remove(cube.transform.position);
         duplicateOnX = InstantiatedCubePositions.Any(pos => pos.x == cube.transform.position.x);
         duplicateOnY = InstantiatedCubePositions.Any(pos => pos.y == cube.transform.position.y);
-        OnCubeDeletedTriggered.Invoke(cube.transform.position,duplicateOnX,duplicateOnY);
+
+        OnCubeDeletedTriggered.Invoke(cube.transform.position, duplicateOnX, duplicateOnY);
     }
 
 }

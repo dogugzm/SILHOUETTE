@@ -11,8 +11,6 @@ public enum COLOR_TYPES
 
 public class Tile : MonoBehaviour
 {
-    //private int tileGrade = 2;
-
     public MeshRenderer tileRenderer;
     public bool isNear = false;
     
