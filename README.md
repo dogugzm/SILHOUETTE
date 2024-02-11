@@ -1,4 +1,4 @@
-# ShadowController
+# SILHOUETTE
 
 It is a minimalist puzzle game where you try to recreate the shape of the object by looking at its silhouette from different angles.
 
